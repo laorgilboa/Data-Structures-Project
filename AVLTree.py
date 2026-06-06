@@ -1,9 +1,9 @@
 # id1: 325762771
 # name1: Laor Gilboa
 # username1: laorgilboa
-# id2:
-# name2:
-# username2:
+# id2: 214441610
+# name2: Ophir Peleg
+# username2: ophirpeleg
 
 
 """A class representing a node in an AVL tree"""
@@ -53,6 +53,7 @@ class AVLTree(object):
         self.virtual_node = AVLNode(None, None)
         self.root = self.virtual_node
         self.is_avl = is_avl
+        self.size = 0
 
     
     """updates the height of a given node
@@ -240,7 +241,7 @@ class AVLTree(object):
     """
 
     def get_root(self):
-        return None
+        return self.root
 
     """returns the height of the tree
 
