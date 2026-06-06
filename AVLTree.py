@@ -178,6 +178,37 @@ class AVLTree(object):
                 
         # The tree is balanced (BF is 1, 0, or -1), no rotations needed
         return 0
+    
+
+    """returns the height of the tree
+
+    @rtype: int
+    @returns: the height of the tree 
+    """
+    def get_height(self):
+        # An empty tree is a tree whose root is the virtual node
+        if not self.root.is_real_node():
+            return -1
+            
+        # In an AVL tree, we return the height field directly in O(1)
+        if self.is_avl:
+            return self.root.height
+        # In a regular BST, we calculate the height recursively in O(n)
+        else:
+            return self._calculate_height_recursive(self.root)
+
+    """helper function to calculate the height of a BST recursively in O(n)
+    
+    @type node: AVLNode
+    @param node: the root of the sub-tree
+    @rtype: int
+    @returns: the height of the sub-tree
+    """
+    def _calculate_height_recursive(self, node):
+        if not node.is_real_node():
+            return -1
+        return 1 + max(self._calculate_height_recursive(node.left), 
+                       self._calculate_height_recursive(node.right))
 
     """searches for a node in the dictionary corresponding to the key (starting at the root)
 
@@ -189,7 +220,21 @@ class AVLTree(object):
     """
 
     def search(self, key):
-        return None, -1
+        current = self.root
+        nodes_visited = 0
+        
+        while current.is_real_node():
+            nodes_visited += 1
+            if key == current.key:
+                # Successful search
+                return current, nodes_visited
+            elif key < current.key:
+                current = current.left
+            else:
+                current = current.right
+                
+        # Failed search (also covers the empty tree case perfectly)
+        return None, nodes_visited + 1
 
     """inserts a new node into the dictionary with corresponding key and value (starting at the root)
 
@@ -204,7 +249,65 @@ class AVLTree(object):
     """
 
     def insert(self, key, val):
-        return None, -1, -1, -1
+        # Phase 1: Search for the insertion point
+        current = self.root
+        parent = None
+        nodes_visited = 0
+        
+        while current.is_real_node():
+            nodes_visited += 1
+            parent = current
+            if key < current.key:
+                current = current.left
+            else:
+                current = current.right
+                
+        search_time = nodes_visited + 1
+        
+        # Create the new real node and attach the shared virtual node as its children
+        new_node = AVLNode(key, val)
+        new_node.left = self.virtual_node
+        new_node.right = self.virtual_node
+        new_node.parent = parent
+        
+        # Connect the new node to the tree structure
+        if parent is None:
+            self.root = new_node
+        elif key < parent.key:
+            parent.left = new_node
+        else:
+            parent.right = new_node
+            
+        rotations = 0
+        height_changes = 0
+        
+        # Phase 2: Update heights and balance the tree (AVL only)
+        if self.is_avl:
+            curr_update = parent
+            while curr_update is None == False and curr_update.is_real_node():
+                old_height = curr_update.height
+                self.update_height(curr_update)
+                new_height = curr_update.height
+                
+                bf = abs(self.get_balance_factor(curr_update))
+                
+                # Case 3.2: Balance Factor is OK and height hasn't changed -> terminate
+                if bf < 2 and old_height == new_height:
+                    break
+                    
+                # Case 3.3: Balance Factor is OK but height changed -> count it and go up
+                elif bf < 2 and old_height != new_height:
+                    height_changes += 1
+                    curr_update = curr_update.parent
+                    
+                # Case 3.4: Balance Factor is violated -> perform rotations
+                elif bf == 2:
+                    rots = self.balance(curr_update)
+                    rotations += rots
+                    # Move up to the parent (which is now the promoted node after rotation)
+                    curr_update = curr_update.parent
+                    
+        return new_node, search_time, rotations, height_changes
 
     """deletes node from the dictionary
 
