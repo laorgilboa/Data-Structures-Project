@@ -280,12 +280,14 @@ class AVLTree(object):
             parent.right = new_node
 
         self.tree_size += 1
+            
         rotations = 0
         height_changes = 0
         
         # Phase 2: Update heights and balance the tree (AVL only)
         if self.is_avl:
             curr_update = parent
+
             while not curr_update is None and curr_update.is_real_node():
                 old_height = curr_update.height
                 self.update_height(curr_update)
