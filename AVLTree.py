@@ -1,6 +1,6 @@
-# id1:
-# name1:
-# username1:
+# id1: 325762771
+# name1: Laor Gilboa
+# username1: laorgilboa
 # id2:
 # name2:
 # username2:
@@ -24,7 +24,7 @@ class AVLNode(object):
         self.left = None
         self.right = None
         self.parent = None
-        self.height = -1
+        self.height = 0 if key is not None else -1
 
     """returns whether self is not a virtual node 
 
@@ -33,7 +33,7 @@ class AVLNode(object):
     """
 
     def is_real_node(self):
-        return False
+        return self.key is not None
 
 
 """
@@ -50,7 +50,134 @@ class AVLTree(object):
     """
 
     def __init__(self, is_avl):
-        self.root = None
+        self.virtual_node = AVLNode(None, None)
+        self.root = self.virtual_node
+        self.is_avl = is_avl
+
+    
+    """updates the height of a given node
+    
+    @type node: AVLNode
+    @param node: the node to update its height
+    """
+    def update_height(self, node):
+        if node.is_real_node():
+            node.height = 1 + max(node.left.height, node.right.height)
+
+    """returns the balance factor of a given node
+    
+    @type node: AVLNode
+    @param node: the node to calculate its balance factor
+    @rtype: int
+    @returns: the balance factor (left.height - right.height), 0 if the node is virtual
+    """
+    def get_balance_factor(self, node):
+        if not node.is_real_node():
+            return 0
+        return node.left.height - node.right.height
+
+
+    """performs a left rotation
+    
+    @type x: AVLNode
+    @param x: the node to perform the rotation on
+    """
+    def left_rotate(self, x):
+        y = x.right
+        x.right = y.left
+        
+        # Update the parent of the moved sub-tree, only if it's a real node
+        if y.left.is_real_node():
+            y.left.parent = x
+            
+        y.parent = x.parent
+        
+        # Update the original parent's pointer (or update the root if x was the root)
+        if x.parent is None:
+            self.root = y
+        elif x == x.parent.left:
+            x.parent.left = y
+        else:
+            x.parent.right = y
+            
+        y.left = x
+        x.parent = y
+        
+        # Update heights: first the child (x), then the new parent (y)
+        self.update_height(x)
+        self.update_height(y)
+
+    """performs a right rotation
+    
+    @type y: AVLNode
+    @param y: the node to perform the rotation on
+    """
+    def right_rotate(self, y):
+        x = y.left
+        y.left = x.right
+        
+        # Update the parent of the moved sub-tree, only if it's a real node
+        if x.right.is_real_node():
+            x.right.parent = y
+            
+        x.parent = y.parent
+        
+        # Update the original parent's pointer (or update the root if y was the root)
+        if y.parent is None:
+            self.root = x
+        elif y == y.parent.right:
+            y.parent.right = x
+        else:
+            y.parent.left = x
+            
+        x.right = y
+        y.parent = x
+        
+        # Update heights: first the child (y), then the new parent (x)
+        self.update_height(y)
+        self.update_height(x)
+
+
+    """restores the AVL tree property of a given node
+    
+    @type node: AVLNode
+    @param node: the node to balance
+    @rtype: int
+    @returns: the number of rotations performed (0, 1, or 2)
+    """
+    def balance(self, node):
+        # Check if the tree is a regular BST or if the node is virtual
+        if not self.is_avl or not node.is_real_node():
+            return 0
+            
+        balance_factor = self.get_balance_factor(node)
+        
+        # Left Heavy (exact violation of 2)
+        if balance_factor == 2:
+            # Left-Right (LR) case
+            if self.get_balance_factor(node.left) < 0:
+                self.left_rotate(node.left)
+                self.right_rotate(node)
+                return 2
+            # Left-Left (LL) case
+            else:
+                self.right_rotate(node)
+                return 1
+                
+        # Right Heavy (exact violation of -2)
+        elif balance_factor == -2:
+            # Right-Left (RL) case
+            if self.get_balance_factor(node.right) > 0:
+                self.right_rotate(node.right)
+                self.left_rotate(node)
+                return 2
+            # Right-Right (RR) case
+            else:
+                self.left_rotate(node)
+                return 1
+                
+        # The tree is balanced (BF is 1, 0, or -1), no rotations needed
+        return 0
 
     """searches for a node in the dictionary corresponding to the key (starting at the root)
 
