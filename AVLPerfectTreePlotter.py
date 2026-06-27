@@ -48,7 +48,8 @@ class AVLPerfectTreePlotter:
             # We scale it so it visually aligns with the empirical data (using operations data)
             max_x = x_data.iloc[-1]
             max_y = y_data_ops.iloc[-1]
-            scale_factor = max_y / np.log2(max_x)
+            scale_factor = 2
+            #max_y / np.log2(max_x)
             
             # Generate smooth x values for the theoretical curve
             x_smooth = np.linspace(min(x_data), max(x_data), 500)
@@ -56,7 +57,7 @@ class AVLPerfectTreePlotter:
 
             # Plot 3: Theoretical Scaled log(n)
             plt.plot(x_smooth, y_theoretical, linestyle=':', color='red', linewidth=2.5, 
-                     label='Theoretical: c * log₂(n)')
+                     label='Theoretical: 2 * log₂(n)')
 
             # Formatting
             plt.title('Amortized Cost of Insertion vs. Tree Size', fontsize=14)
@@ -66,6 +67,9 @@ class AVLPerfectTreePlotter:
             # Use linear scale to clearly see the logarithmic curve shape
             plt.xscale('linear')
             plt.yscale('linear')
+            
+            # Force X-axis to start at 0 so the first data point isn't glued to the Y-axis
+            plt.xlim(left=0)
             
             plt.grid(True, which="both", ls="--", alpha=0.5)
 
